@@ -3,7 +3,9 @@
 #include <SDL2/SDL_image.h>
 #include "imageLoader.hpp"
 
+TextureRectangle::TextureRectangle(){
 
+}
 
 TextureRectangle::TextureRectangle(SDL_Renderer*& renderer, std::string imgpath){
     src_rct.x = 0;
@@ -14,8 +16,7 @@ TextureRectangle::TextureRectangle(SDL_Renderer*& renderer, std::string imgpath)
     dst_rct.y = 0;
     dst_rct.w = 800;
     dst_rct.h = 600;
-    // Setup and initialize the SDL2_Image library
-    // with our supported formats
+    // SDL2 Image format
     int flags = IMG_INIT_PNG;
     int initStatus = IMG_Init(flags);
     if((initStatus & flags) != flags){
@@ -55,4 +56,8 @@ void TextureRectangle::Update(){
 
 void TextureRectangle::Render(SDL_Renderer*& renderer){
     SDL_RenderCopy(renderer,m_texture,NULL,&dst_rct);
+}
+
+int TextureRectangle::printl(){
+    return dst_rct.x;
 }

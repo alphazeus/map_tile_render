@@ -14,4 +14,4 @@ class mapTile{
         int y_cord;
 };
 
-std::vector<mapTile> createMapList();
+std::vector<std::vector<mapTile>> createMapList();
