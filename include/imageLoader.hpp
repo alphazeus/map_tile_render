@@ -4,9 +4,10 @@
 
 class TextureRectangle{
     public:
-        TextureRectangle(SDL_Renderer*&);
+        TextureRectangle(SDL_Renderer*&, std::string);
         ~TextureRectangle();
-        void SetRectangleParams(int, int, int, int);
+        void SetSrcRectParams(int, int, int, int);
+        void SetDstRectParams(int, int, int, int);
         void Update();
         void Render(SDL_Renderer*&);
     private:

@@ -5,7 +5,7 @@
 
 
 
-TextureRectangle::TextureRectangle(SDL_Renderer*& renderer){
+TextureRectangle::TextureRectangle(SDL_Renderer*& renderer, std::string imgpath){
     src_rct.x = 0;
     src_rct.y = 0;
     src_rct.w = 800;
@@ -21,7 +21,7 @@ TextureRectangle::TextureRectangle(SDL_Renderer*& renderer){
     if((initStatus & flags) != flags){
         std::cout << "SDL2_Image format not available" << std::endl;
     }
-    SDL_Surface* image = IMG_Load("assets/tileset/L3321L.png");
+    SDL_Surface* image = IMG_Load(imgpath.c_str());
     if(!image){
         std::cout << "Image not loaded..." << std::endl;
     }
@@ -35,11 +35,18 @@ TextureRectangle::~TextureRectangle(){
     IMG_Quit();
 }
 
-void TextureRectangle::SetRectangleParams(int x, int y, int w, int h){
+void TextureRectangle::SetSrcRectParams(int x, int y, int w, int h){
     src_rct.x = x;
     src_rct.y = y;
     src_rct.w = w;
     src_rct.h = h;
+}
+
+void TextureRectangle::SetDstRectParams(int x, int y, int w, int h){
+    dst_rct.x = x;
+    dst_rct.y = y;
+    dst_rct.w = w;
+    dst_rct.h = h;
 }
 
 void TextureRectangle::Update(){
@@ -47,5 +54,5 @@ void TextureRectangle::Update(){
 }
 
 void TextureRectangle::Render(SDL_Renderer*& renderer){
-    SDL_RenderCopy(renderer,m_texture,&src_rct,&dst_rct);
+    SDL_RenderCopy(renderer,m_texture,NULL,&dst_rct);
 }
