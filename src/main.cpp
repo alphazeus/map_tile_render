@@ -119,12 +119,12 @@ int main(int argc, char* argv[]){
     //variables for the environment (temporary)
     bool gameIsRunning = true;
     int scale = 1;
+    int marker_x = 0,marker_y = 0;
     // Main application loop
     while(gameIsRunning){
         SDL_Event event;
 
-        // (1) Handle Input
-        // Start our event loop
+        // Handle Input
         while(SDL_PollEvent(&event)){
             // Handle each specific event
             if(event.type == SDL_QUIT){
@@ -151,6 +151,11 @@ int main(int argc, char* argv[]){
                 if(event.key.keysym.sym == SDLK_o){
                     scale = scale <= 1 ? 1 : scale - 1;
                 }
+                //temporary to set the cordinate marker to arbitrary position
+                if(event.key.keysym.sym == SDLK_m){
+                    marker_x +=100;
+                    marker_y += 40;
+                }
             }
 
             int* Limits = findRenderLimits(mapList, LimitArr, xBegCam, yBegCam, xBegCam+800*scale, yBegCam+1000*scale);
@@ -165,28 +170,26 @@ int main(int argc, char* argv[]){
                     }
                 }
             }
-
-            // (2) Handle Updates
         
-            // (3) Clear and Draw the Screen
+            //  Clear and Draw the Screen
             // Gives us a clear "canvas"
             SDL_SetRenderDrawColor(renderer,0,0,0,SDL_ALPHA_OPAQUE);
             SDL_RenderClear(renderer);
 
             for(int i=Limits[1];i<=Limits[3];i++){
                 for(int j=Limits[0]; j<=Limits[2];j++){
-                    std::cout << " Printing (" <<Limits[0]<<","<<Limits[1]<<") and ("<<Limits[2]<<","<<Limits[3]<<")\n";
+                    std::cout << " Printing (" <<Limits[0]<<","<<Limits[1]<<") to ("<<Limits[2]<<","<<Limits[3]<<")\n";
                     tilesGenerated[i][j].SetDstRectParams(-xBegCam+(j*(6000/scale)), -yBegCam+(i*(6000/scale)), 6000/scale, 6000/scale);
                     tilesGenerated[i][j].Render(renderer);
                 }
             }
 
-            marker.Update(6000, 200, xBegCam, yBegCam, xBegCam+800*scale, yBegCam+600*scale);
+            marker.Update(marker_x, marker_y, xBegCam, yBegCam, xBegCam+800*scale, yBegCam+600*scale);
             marker.Render(renderer);
                     
         }
 
-        // Finally show what we've drawn
+        // Render everything to screen
         SDL_RenderPresent(renderer);
     }
 
