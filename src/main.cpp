@@ -4,6 +4,7 @@
 #include "imageLoader.hpp"
 #include "keyboardHandler.hpp"
 #include "mapAssetManager.hpp"
+#include "pinMarker.hpp"
 
 const int WIDTH = 800, HEIGHT = 600;
 
@@ -66,9 +67,6 @@ int* findRenderLimits(std::vector<std::vector<mapTile>> mapList, int* Limits, in
         }
     }
 
-    std::cout << "Searching for:" << xBegCam <<" and " << xEndCam << " (Limit Beg X :" << Limits[0] << "," << "(Limit End X :" << Limits[2] << ")" ;
-    std::cout << "  Searching for:" << yBegCam <<" and " << yEndCam << " (Limit Beg Y :" << Limits[1] << "," << "(Limit End Y :" << Limits[3] << ")" ;
-
     return Limits;
 
 }
@@ -83,6 +81,14 @@ int main(int argc, char* argv[]){
     }else{
         std::cout << "SDL video system is ready to go\n";
     }
+
+    // SDL2 Image format
+    int flags = IMG_INIT_PNG;
+    int initStatus = IMG_Init(flags);
+    if((initStatus & flags) != flags){
+        std::cout << "SDL2_Image format not available" << std::endl;
+    }
+
     // Request a window to be created for our platform
     window = SDL_CreateWindow("C++ Map Render Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
 
@@ -92,7 +98,7 @@ int main(int argc, char* argv[]){
     int LimitArr[4] = {0,0,0,0};
     
     std::vector<std::vector<mapTile>> mapList = createMapList();
-
+    pinClass marker(renderer);
     TextureRectangle tilesGenerated[3][3];
     // generateNewTiles(renderer, mapList, LimitArr);
 
@@ -108,7 +114,7 @@ int main(int argc, char* argv[]){
     tilesGenerated[1][0] = rect4;
     tilesGenerated[1][1] = rect5;
     tilesGenerated[2][0] = rect7;
-    tilesGenerated[2][0] = rect8;
+    tilesGenerated[2][1] = rect8;
 
     //variables for the environment (temporary)
     bool gameIsRunning = true;
@@ -131,10 +137,10 @@ int main(int argc, char* argv[]){
                     xBegCam += 20;
                 }
                 if(event.key.keysym.sym == SDLK_LEFT){
-                    xBegCam -= 20;
+                    xBegCam = xBegCam <= 0 ? 0 : xBegCam -= 20;
                 }
                 if(event.key.keysym.sym == SDLK_UP){
-                    yBegCam -= 20;
+                    yBegCam = yBegCam <= 0 ? 0 : yBegCam -= 20;
                 }
                 if(event.key.keysym.sym == SDLK_DOWN){
                     yBegCam += 20;
@@ -147,32 +153,19 @@ int main(int argc, char* argv[]){
                 }
             }
 
-            int* Limits = findRenderLimits(mapList, LimitArr, xBegCam, yBegCam, xBegCam+800, yBegCam+600);
+            int* Limits = findRenderLimits(mapList, LimitArr, xBegCam, yBegCam, xBegCam+800*scale, yBegCam+1000*scale);
             
-            std::cout <<" Needs tile ?" << checkForTileGeneration(Limits)<<"\n";
+            std::cout <<" Needs new tile ?" << checkForTileGeneration(Limits)<<"\n";
 
             if(checkForTileGeneration(Limits)){
-                TextureRectangle rect1(renderer,mapList[0][0].getTilePath());
-                TextureRectangle rect2(renderer,mapList[0][1].getTilePath());
-                TextureRectangle rect4(renderer,mapList[1][0].getTilePath());
-                TextureRectangle rect5(renderer,mapList[1][1].getTilePath());
-                TextureRectangle rect7(renderer,mapList[2][0].getTilePath());
-                TextureRectangle rect8(renderer,mapList[2][1].getTilePath());
-
-                tilesGenerated[0][0] = rect1;
-                tilesGenerated[0][1] = rect2;
-                tilesGenerated[1][0] = rect4;
-                tilesGenerated[1][1] = rect5;
-                tilesGenerated[2][0] = rect7;
-                tilesGenerated[2][0] = rect8;
+                for(int i=Limits[1];i<=Limits[3];i++){
+                    for(int j=Limits[0]; j<=Limits[2];j++){
+                        TextureRectangle rect(renderer,mapList[i][j].getTilePath());
+                        tilesGenerated[i][j] = rect;
+                    }
+                }
             }
-            
-            tilesGenerated[0][0].SetDstRectParams(-xBegCam, -yBegCam, 6000/scale, 6000/scale);
-            tilesGenerated[0][1].SetDstRectParams(-xBegCam+(6000/scale), -yBegCam, 6000/scale, 6000/scale);
-            tilesGenerated[1][0].SetDstRectParams(-xBegCam, -yBegCam+(6000/scale), 6000/scale, 6000/scale);
-            tilesGenerated[1][1].SetDstRectParams(-xBegCam+(6000/scale), -yBegCam+(6000/scale), 6000/scale, 6000/scale);
-            tilesGenerated[2][0].SetDstRectParams(-xBegCam, -yBegCam+(2*(6000/scale)), 6000/scale, 6000/scale);
-            tilesGenerated[2][0].SetDstRectParams(-xBegCam+(6000/scale), -yBegCam+(2*(6000/scale)), 6000/scale, 6000/scale);
+
             // (2) Handle Updates
         
             // (3) Clear and Draw the Screen
@@ -180,9 +173,17 @@ int main(int argc, char* argv[]){
             SDL_SetRenderDrawColor(renderer,0,0,0,SDL_ALPHA_OPAQUE);
             SDL_RenderClear(renderer);
 
-            for(int i=0;i<3;i++)
-                for(int j=0; j<2;j++)
+            for(int i=Limits[1];i<=Limits[3];i++){
+                for(int j=Limits[0]; j<=Limits[2];j++){
+                    std::cout << " Printing (" <<Limits[0]<<","<<Limits[1]<<") and ("<<Limits[2]<<","<<Limits[3]<<")\n";
+                    tilesGenerated[i][j].SetDstRectParams(-xBegCam+(j*(6000/scale)), -yBegCam+(i*(6000/scale)), 6000/scale, 6000/scale);
                     tilesGenerated[i][j].Render(renderer);
+                }
+            }
+
+            marker.Update(6000, 200, xBegCam, yBegCam, xBegCam+800*scale, yBegCam+600*scale);
+            marker.Render(renderer);
+                    
         }
 
         // Finally show what we've drawn
@@ -191,7 +192,7 @@ int main(int argc, char* argv[]){
 
     // Destroying the window to retrieve memory allocated
     SDL_DestroyWindow(window);
-
+    IMG_Quit();
     // Stopping SDL Video or audio system initiated
     SDL_Quit();
     return 0;

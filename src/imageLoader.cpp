@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include "imageLoader.hpp"
+#include <fstream>
 
 TextureRectangle::TextureRectangle(){
 
@@ -16,12 +17,7 @@ TextureRectangle::TextureRectangle(SDL_Renderer*& renderer, std::string imgpath)
     dst_rct.y = 0;
     dst_rct.w = 800;
     dst_rct.h = 600;
-    // SDL2 Image format
-    int flags = IMG_INIT_PNG;
-    int initStatus = IMG_Init(flags);
-    if((initStatus & flags) != flags){
-        std::cout << "SDL2_Image format not available" << std::endl;
-    }
+    
     SDL_Surface* image = IMG_Load(imgpath.c_str());
     if(!image){
         std::cout << "Image not loaded..." << std::endl;
@@ -29,11 +25,26 @@ TextureRectangle::TextureRectangle(SDL_Renderer*& renderer, std::string imgpath)
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
     m_texture = SDL_CreateTextureFromSurface(renderer, image);
     SDL_FreeSurface(image);
+
+    std::string fileString;
+    std::ifstream PGWFile(imgpath.substr(0, imgpath.size()-3)+"pgw");
+    for(int i=0;i<6; i++){
+        getline (PGWFile, fileString);
+        // Output the text from the file
+        std::cout << fileString<<"\n";
+        if(i == 6){
+            x_cord = stoi(fileString);
+        }
+        if(i == 7){
+            y_cord = stoi(fileString);
+        }
+    }
+    std::cout <<"File read complete!\n";
+    PGWFile.close();
 }
 
 TextureRectangle::~TextureRectangle(){
     SDL_DestroyTexture(m_texture);
-    IMG_Quit();
 }
 
 void TextureRectangle::SetSrcRectParams(int x, int y, int w, int h){
@@ -56,8 +67,4 @@ void TextureRectangle::Update(){
 
 void TextureRectangle::Render(SDL_Renderer*& renderer){
     SDL_RenderCopy(renderer,m_texture,NULL,&dst_rct);
-}
-
-int TextureRectangle::printl(){
-    return dst_rct.x;
 }
